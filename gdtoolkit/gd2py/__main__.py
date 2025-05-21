@@ -16,6 +16,7 @@ Examples:
   gd2py file.gd              # produces python file on stdout
   gd2py ./addons/gut/gut.gd | radon cc -s -
 """
+
 import sys
 import pkg_resources
 

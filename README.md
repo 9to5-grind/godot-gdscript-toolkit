@@ -196,4 +196,9 @@ repos:
 
 ## Development [(more)](https://github.com/Scony/godot-gdscript-toolkit/wiki/5.-Development)
 
+python3 -m venv .venv
+source .venv/bin/activate
+which python3
+tox -- -k region_spacing_test
+
 Everyone is free to fix bugs or introduce new features. For that, however, please refer to existing issue or create one before starting implementation.

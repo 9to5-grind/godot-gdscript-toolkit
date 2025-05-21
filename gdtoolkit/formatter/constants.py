@@ -20,7 +20,7 @@ DEFAULT_SURROUNDING_EMPTY_LINES_TABLE = MappingProxyType(
 GLOBAL_SCOPE_SURROUNDING_EMPTY_LINES_TABLE = MappingProxyType(
     {
         "class_def": 2,
-        "func_def": 2,
+        "func_def": 1,
         "static_func_def": 2,
         "remote_func_def": 2,
         "remotesync_func_def": 2,

@@ -94,9 +94,11 @@ def expression_to_str(expression: Node) -> str:
         "func_args": _args_to_str,
         "func_arg_regular": lambda e: "{}{}".format(
             e.children[0].value,
-            " = {}".format(standalone_expression_to_str(e.children[1]))
-            if len(e.children) > 1
-            else "",
+            (
+                " = {}".format(standalone_expression_to_str(e.children[1]))
+                if len(e.children) > 1
+                else ""
+            ),
         ),
         "func_arg_inf": lambda e: "{} := {}".format(
             e.children[0].value, standalone_expression_to_str(e.children[1])
@@ -104,9 +106,11 @@ def expression_to_str(expression: Node) -> str:
         "func_arg_typed": lambda e: "{}: {}{}".format(
             e.children[0].value,
             e.children[1].value,
-            f" = {standalone_expression_to_str(e.children[2])}"
-            if len(e.children) > 2
-            else "",
+            (
+                f" = {standalone_expression_to_str(e.children[2])}"
+                if len(e.children) > 2
+                else ""
+            ),
         ),
         "enum_body": _enum_body_to_str,
         "enum_element": _enum_element_to_str,

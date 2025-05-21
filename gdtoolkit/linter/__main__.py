@@ -14,6 +14,7 @@ Options:
   -h --help                  Show this screen.
   --version                  Show version.
 """
+
 import sys
 import os
 import logging

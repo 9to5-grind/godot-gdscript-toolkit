@@ -12,6 +12,7 @@ Options:
   -h --help     Show this screen.
   --version     Show version.
 """
+
 import sys
 from typing import Dict
 import pkg_resources

@@ -13,11 +13,19 @@ aaa = None
 A = 1
 B = 1
 C = 1
+
+
 class D:
-	pass
+    pass
+
+
 pass
 pass
+
+
 def foo():
-	pass
+    pass
+
+
 def bar():
-	pass
+    pass

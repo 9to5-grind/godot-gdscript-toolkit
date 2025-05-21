@@ -1,18 +1,13 @@
 import os
 from typing import Set
-
 from .common import format_and_compare
 
 
 DATA_DIR = "./input-output-pairs"
-EXCEPTIONS = set(
-    [
-        # TODO: fix
-        "inline_lambdas_w_comments",
-        # Desired yet not possible to support due to Godot bug:
-        "bug_326_multistatement_lambda_corner_case",
-    ]
-)  # type: Set[str]
+EXCEPTIONS = {
+    "inline_lambdas_w_comments",
+    "bug_326_multistatement_lambda_corner_case",
+}  # type: Set[str]
 
 
 def pytest_generate_tests(metafunc):

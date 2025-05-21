@@ -69,6 +69,8 @@ def format_code(
     formatted_lines = _add_standalone_comments(
         formatted_lines, context.standalone_comments, context.indent_regex
     )
+    formatted_lines = _cleanup_region_spacing(formatted_lines)
+
     return "\n".join([line for _, line in formatted_lines])
 
 
@@ -96,6 +98,7 @@ def _add_inline_comments(
     return list(reversed(postprocessed_lines))
 
 
+# pylint: disable=too-many-locals
 def _add_standalone_comments(
     formatted_lines: FormattedLines,
     standalone_comments: List[Optional[str]],
@@ -104,7 +107,7 @@ def _add_standalone_comments(
     remaining_comments = standalone_comments[:]
     postprocessed_lines = []  # type: FormattedLines
     currently_inside_expression = False
-    last_experssion_line_no = None
+    last_expression_line_no = None
 
     for line_no, line in reversed(formatted_lines):
         if line_no is None:
@@ -114,16 +117,42 @@ def _add_standalone_comments(
         if not currently_inside_expression:
             postprocessed_lines.append((line_no, line))
             currently_inside_expression = True
-            last_experssion_line_no = line_no
+            last_expression_line_no = line_no
             continue
-        comments = remaining_comments[line_no:last_experssion_line_no]
+
+        comments = remaining_comments[line_no:last_expression_line_no]
         remaining_comments = remaining_comments[:line_no]
         indent = _get_greater_indent(line, postprocessed_lines[-1][1], indent_regex)
-        postprocessed_lines += [
-            (None, f"{indent}{comment}")
-            for comment in reversed(comments)
-            if comment is not None
-        ]
+
+        reversed_comments = list(reversed(comments))
+        for i, comment in enumerate(reversed_comments):
+            if comment is None:
+                continue
+            stripped = comment.strip()
+
+            if stripped.startswith("#region"):
+                # Insert a blank line before #region (optional)
+                postprocessed_lines.append((None, ""))
+                postprocessed_lines.append((None, f"{indent}{comment}"))
+
+            elif stripped.startswith("#endregion"):
+                # Remove up to 2 blank lines if they precede this comment
+                while postprocessed_lines and postprocessed_lines[-1][1].strip() == "":
+                    postprocessed_lines.pop()
+
+                postprocessed_lines.append((None, f"{indent}{comment}"))
+
+                # Add 2 lines after if another #region follows
+                if i + 1 < len(reversed_comments):
+                    next_comment = reversed_comments[i + 1]
+                    if next_comment and next_comment.strip().startswith("#region"):
+                        postprocessed_lines.append((None, ""))
+                        postprocessed_lines.append((None, ""))
+
+            else:
+                # Normal comments
+                postprocessed_lines.append((None, f"{indent}{comment}"))
+
         postprocessed_lines.append((line_no, line))
 
     return list(reversed(postprocessed_lines))
@@ -135,3 +164,39 @@ def _get_greater_indent(line_a: str, line_b: str, indent_regex: re.Pattern):
     line_a_indent = "" if line_a_match is None else line_a_match.group(0)
     line_b_indent = "" if line_b_match is None else line_b_match.group(0)
     return line_a_indent if len(line_a_indent) > len(line_b_indent) else line_b_indent
+
+
+def _cleanup_region_spacing(formatted_lines: FormattedLines) -> FormattedLines:
+    cleaned: FormattedLines = []
+    i = 0
+    while i < len(formatted_lines):
+        line_no, line = formatted_lines[i]
+        stripped = line.strip()
+
+        if stripped.startswith("#endregion"):
+            # Remove blank lines before #endregion
+            while cleaned and cleaned[-1][1].strip() == "":
+                cleaned.pop()
+            cleaned.append((line_no, line))
+
+            # Look ahead: if next non-blank is #region, ensure exactly 2 blank lines
+            j = i + 1
+            # Count how many blank lines already exist
+            blank_lines = 0
+            while j < len(formatted_lines):
+                _, next_line = formatted_lines[j]
+                if next_line.strip() == "":
+                    blank_lines += 1
+                    j += 1
+                    continue
+                if next_line.strip().startswith("#region"):
+                    missing = 2 - blank_lines
+                    for _ in range(missing):
+                        cleaned.append((None, ""))
+                break
+        else:
+            cleaned.append((line_no, line))
+
+        i += 1
+
+    return cleaned

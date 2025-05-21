@@ -3,6 +3,7 @@ Initializes and caches the GDScript parsers, using Lark.
 Provides a function to parse GDScript code
 and to get an intermediate representation as a Lark Tree.
 """
+
 import os
 import sys
 import pkg_resources

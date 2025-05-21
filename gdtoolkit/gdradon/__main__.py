@@ -12,6 +12,7 @@ Options:
 Examples:
   gdradon cc file1.gd file2.gd path/
 """
+
 import sys
 from typing import List
 import pkg_resources

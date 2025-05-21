@@ -61,7 +61,13 @@ def _gather_comments_by_prefix_regex(
 
 
 def _rstrip_comments(comments: List[Optional[str]]) -> List[Optional[str]]:
-    return [
-        comment.rstrip() if isinstance(comment, str) else comment
-        for comment in comments
-    ]
+    result: List[Optional[str]] = []
+    for comment in comments:
+        if isinstance(comment, str):
+            stripped = comment.strip()
+            if stripped.startswith("#region "):
+                comment = re.sub(r"^(#region)\s+", r"\1 ", comment.rstrip())
+            result.append(comment.rstrip())
+        else:
+            result.append(comment)
+    return result
