@@ -21,11 +21,16 @@ from .constants import TAB_INDENT_SIZE
 
 
 def format_expression(
-    expression: Tree, expression_context: ExpressionContext, context: Context
+    expression: Tree,
+    expression_context: ExpressionContext,
+    context: Context,
+    is_if_elif_condition_expr: bool = False,
 ) -> Outcome:
     concrete_expression = expression.children[0]
     return (
-        _format_standalone_expression(concrete_expression, expression_context, context),
+        _format_standalone_expression(
+            concrete_expression, expression_context, context, is_if_elif_condition_expr
+        ),
         get_end_line(expression),
     )
 
@@ -40,9 +45,13 @@ def format_concrete_expression(
 
 
 def _format_standalone_expression(
-    expression: Node, expression_context: ExpressionContext, context: Context
+    expression: Node,
+    expression_context: ExpressionContext,
+    context: Context,
+    is_if_elif_condition_expr: bool = False,
 ) -> FormattedLines:
-    expression = remove_outer_parentheses(expression)
+    if not is_if_elif_condition_expr:
+        expression = remove_outer_parentheses(expression)
     return _format_concrete_expression(expression, expression_context, context)
 
 

@@ -74,7 +74,12 @@ def _format_if_statement(statement: Tree, context: Context) -> Outcome:
             branch.data
         ]
         lines, previously_processed_line_number = _format_branch(
-            branch_prefix, ":", expr_position, branch, context
+            branch_prefix,
+            ":",
+            expr_position,
+            branch,
+            context,
+            True,
         )
         formatted_lines += lines
     return (formatted_lines, previously_processed_line_number)  # type: ignore
@@ -123,6 +128,7 @@ def _format_branch(
     expr_position: Optional[int],
     statement: Tree,
     context: Context,
+    preserve_condition_parentheses: bool = False,
 ) -> Outcome:
     if expr_position is not None:
         expr = statement.children[expr_position]
@@ -130,7 +136,7 @@ def _format_branch(
             prefix, get_line(statement), suffix, get_line(statement)
         )
         header_lines, last_processed_line_no = format_expression(
-            expr, expression_context, context
+            expr, expression_context, context, preserve_condition_parentheses
         )
         offset = expr_position + 1
     else:
