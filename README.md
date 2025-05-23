@@ -201,4 +201,6 @@ source .venv/bin/activate
 which python3
 tox -- -k region_spacing_test
 
+pip3 install git+https://github.com/9to5-grind/godot-gdscript-toolkit.git
+
 Everyone is free to fix bugs or introduce new features. For that, however, please refer to existing issue or create one before starting implementation.

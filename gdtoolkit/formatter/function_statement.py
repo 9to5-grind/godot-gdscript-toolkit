@@ -122,6 +122,8 @@ def _format_guarded_match_branch(statement: Tree, context: Context) -> Outcome:
     return _format_branch(prefix, suffix, expr_position, statement, context)
 
 
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-positional-arguments
 def _format_branch(
     prefix: str,
     suffix: str,
