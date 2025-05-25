@@ -147,20 +147,26 @@ def _format_docstring_statement(statement: Tree, context: Context) -> Outcome:
     )
 
 
-def _format_class_statement(statement: Tree, context: Context) -> Outcome:
-    last_processed_line_no = get_line(statement)
-    name = statement.children[0].value
-    formatted_lines: FormattedLines = [
-        (get_line(statement), f"{context.indent_string}class {name}:")
-    ]
-    class_lines, last_processed_line_no = format_block(
-        statement.children[1:],
-        format_class_statement,
-        context.create_child_context(last_processed_line_no),
-    )
-    formatted_lines += class_lines
-    return (formatted_lines, last_processed_line_no)
+from lark import Tree, Token
 
+def _format_class_statement(statement: Tree, context: Context) -> Outcome:
+    line_number = statement.meta.line
+    end_line = statement.meta.end_line
+
+    class_name_token = statement.children[0]
+    assert isinstance(class_name_token, Token), "Expected class name to be a Token"
+    class_name = class_name_token.value
+
+    extends_clause = ""
+    if len(statement.children) > 1:
+        maybe_extends = statement.children[1]
+        if isinstance(maybe_extends, Tree) and maybe_extends.data == "extends_stmt":
+            base_class_token = maybe_extends.children[0]
+            assert isinstance(base_class_token, Token), "Expected base class to be a Token"
+            extends_clause = f" extends {base_class_token.value}"
+
+    line = f"{context.indent_string}class {class_name}{extends_clause}:"
+    return ([(line_number, line)], end_line)
 
 def _format_func_statement(
     statement: Tree, context: Context, prefix: str = ""

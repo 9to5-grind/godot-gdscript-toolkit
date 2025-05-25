@@ -200,6 +200,8 @@ python3 -m venv .venv
 source .venv/bin/activate
 which python3
 tox -- -k region_spacing_test
+ rm -rf ~/Library/Caches/gdtoolkit/4.3.4
+
 
 pip3 install git+https://github.com/9to5-grind/godot-gdscript-toolkit.git
 

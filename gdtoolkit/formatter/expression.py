@@ -488,24 +488,51 @@ def _format_contextless_operator_chain_based_expression_to_multiple_lines(
     expression: Tree, _: ExpressionContext, context: Context
 ) -> FormattedLines:
     formatted_lines = []  # type: FormattedLines
-    value = expression.children[0]
-    lines = _format_concrete_expression(
-        value, ExpressionContext("", get_line(value), "", get_end_line(value)), context
+
+    operands = expression.children[0::2]
+    operators = expression.children[1::2]
+
+    if not operands:
+        # This should not happen for a validly parsed operator chain expression.
+        return []
+
+    first_operand_node = operands[0]
+    current_operand_formatted_lines = _format_concrete_expression(
+        first_operand_node,
+        ExpressionContext(
+            "",  # No operator prefix for the operand itself
+            get_line(first_operand_node),
+            "",  # No operator suffix for the operand itself
+            get_end_line(first_operand_node),
+        ),
+        context,
     )
-    formatted_lines += lines
-    operator_expr_chain = zip(expression.children[1::2], expression.children[2::2])
-    for operator, child in operator_expr_chain:
-        lines = _format_concrete_expression(
-            child,
+    formatted_lines.extend(current_operand_formatted_lines)
+
+    for i in range(len(operators)):
+        operator_node = operators[i]  # This is typically a Token
+        next_operand_node = operands[i + 1]
+
+        operator_str = expression_to_str(operator_node)
+
+        if formatted_lines:
+            line_number, last_line_content = formatted_lines.pop()
+            formatted_lines.append((line_number, f"{last_line_content} {operator_str}"))
+        else:
+            pass
+
+        current_operand_formatted_lines = _format_concrete_expression(
+            next_operand_node,
             ExpressionContext(
-                f"{expression_to_str(operator)} ",
-                get_line(child),
-                "",
-                get_end_line(child),
+                "",  # No operator prefix
+                get_line(next_operand_node),
+                "",  # No operator suffix
+                get_end_line(next_operand_node),
             ),
             context,
         )
-        formatted_lines += lines
+        formatted_lines.extend(current_operand_formatted_lines)
+
     return formatted_lines
 
 
