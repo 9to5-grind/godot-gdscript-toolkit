@@ -42,9 +42,6 @@ def expression_to_str(expression: Node) -> str:
             "" if e.children[0].value == "!" else " ",
             expression_to_str(e.children[1]),
         ),
-        "extends_stmt": lambda e: "extends {}".format(
-            ".".join(expression_to_str(child) for child in e.children)
-        ),
         "not_in_op": lambda _: "not in",
         "content_test": _operator_chain_based_expression_to_str,
         "asless_content_test": _operator_chain_based_expression_to_str,
