@@ -126,9 +126,10 @@ def _is_unistatement_lambda_with_compoud_statement(expression: Tree) -> bool:
 
 def is_safe_operator_expression(expr: Tree) -> bool:
     return expr.data in {
-        "asless_test_expr",
         "or_test",
         "asless_or_test",
+        "comparison",  # MAKE SURE THIS IS PRESENT
+        "asless_comparison",  # MAKE SURE THIS IS PRESENT
         "and_test",
         "asless_and_test",
         "comparison",

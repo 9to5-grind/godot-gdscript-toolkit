@@ -439,61 +439,162 @@ def _format_subscription_to_multiple_lines(
     return subscriptee_lines[:-1] + subscript_lines
 
 
-def _format_operator_chain_based_expression_to_multiple_lines(
-    expression: Tree, expression_context: ExpressionContext, context: Context
+def _format_operator_chain_based_expression_to_multiple_lines(  # New version
+        expression: Tree, expression_context: ExpressionContext, context: Context
 ) -> FormattedLines:
-    inside_par = (
-        expression_context.prefix_string.endswith("(")
-        and expression_context.suffix_string.startswith(")")
-    ) or (
-        expression_context.prefix_string.endswith("[")
-        and expression_context.suffix_string.startswith("]")
-    )
-    should_group = not inside_par and not is_safe_operator_expression(expression)
-    lpar = "(" if should_group else ""
-    rpar = ")" if should_group else ""
+    # Original prefix/suffix from the ExpressionContext for the whole operator chain
+    # e.g., for "if (a && b):", prefix_string="if (", suffix_string="):"
+    # e.g., for "x = a && b", prefix_string="x = ", suffix_string=""
+    outer_prefix = expression_context.prefix_string
+    outer_suffix = expression_context.suffix_string
 
-    if should_group:
-        context_for_internals = context.create_child_context(
-            expression_context.prefix_line
+    # Determine if *new* grouping parentheses are needed around the entire chain.
+    # This is for cases like `foo = bar or \n baz` becoming `foo = (bar or \n baz)`
+    # It's NOT for the parentheses already part of `if (...)` or `call(...)`.
+    already_in_parens_from_context = (
+                                             outer_prefix.endswith("(") and outer_suffix.startswith(")")
+                                     ) or (outer_prefix.endswith("[") and outer_suffix.startswith("]"))
+
+    # If it's not already in parens from the context (like if, while, func call)
+    # AND it's not a "safe" operator type, then we need to add grouping parens.
+    needs_new_grouping_parens = (
+            not already_in_parens_from_context
+            and not is_safe_operator_expression(expression)
+    )
+
+    # These are the parentheses for the *overall grouping* if needed
+    grouping_lpar = "(" if needs_new_grouping_parens else ""
+    grouping_rpar = ")" if needs_new_grouping_parens else ""
+
+    # Prepare the lines
+    formatted_lines: FormattedLines = []
+
+    processed_outer_prefix = outer_prefix.rstrip()
+    space_before_grouping_lpar = ""
+    if grouping_lpar and processed_outer_prefix:
+        # If the original outer_prefix (before rstrip) did not end with a space,
+        # and we are adding a grouping_lpar, we might need a space.
+        # Example: "foo=" + "(" -> "foo= ("
+        # More robust: if the rstripped prefix doesn't end with '(', '[', '{'
+        # and isn't empty, and grouping_lpar is '(', then add space.
+        if not processed_outer_prefix.endswith(tuple(" ([{")) and not outer_prefix.endswith(
+                " "):  # Check original for space
+            # If original outer_prefix did not have a trailing space (e.g. "foo=" vs "foo = ")
+            # AND we're adding a '(', ensure a space.
+            # The .rstrip() above removes the space if it was there. We need to re-evaluate.
+            # Let's assume outer_prefix already has the correct spacing (e.g., "foo = ").
+            # The .rstrip() is to handle cases where outer_prefix might be "foo =  " (extra spaces).
+            # The issue is when outer_prefix is "foo=" and grouping_lpar is "(". We need "foo = (".
+            # The ExpressionContext for var assignment *should* be "var name = ".
+            # So `outer_prefix.rstrip()` would be "var name =".
+            # Then `... + "("` gives "var name =(".
+            #
+            # The simple fix is if grouping_lpar is active, and outer_prefix is not empty
+            # and doesn't already end with a '(', ensure it ends with a space before adding '('.
+            if not processed_outer_prefix.endswith(tuple(list("([{."))):  # Dot also doesn't need space.
+                space_before_grouping_lpar = " "
+
+    # Line 1: indent + processed_outer_prefix + space_needed + grouping_lpar
+    # The original prefix string from ExpressionContext (e.g., "var x = ") usually has the correct trailing space.
+    # rstrip() might remove it if we're not careful.
+    # Let's adjust:
+
+    prefix_part = outer_prefix
+    if grouping_lpar and prefix_part and not prefix_part.endswith(" ") and not prefix_part.endswith(
+            tuple(list("([{."))):
+        # If we are adding a grouping_lpar, and the prefix_part (like "var x=")
+        # doesn't naturally end with a space or an open paren/bracket/dot, add a space.
+        prefix_part += " "
+
+    line_1_content = f"{context.indent_string}{prefix_part}{grouping_lpar}"
+
+    # If outer_prefix was empty and no grouping_lpar, this might be just indent. Avoid if so.
+    if line_1_content.strip() != "":
+        formatted_lines.append((expression_context.prefix_line, line_1_content.rstrip()))
+
+    # Context for the elements *within* the operator chain (they get indented)
+    # Always use a child context for the chain elements themselves when multiline.
+    context_for_the_chain_elements = context
+    if needs_new_grouping_parens:
+        # This function is adding '(...)' around the expression.
+        # The elements of the chain should be indented one level
+        # relative to the line where the opening grouping_lpar is placed.
+        context_for_the_chain_elements = context.create_child_context(
+            get_line(expression.children[0]) if expression.children else expression_context.prefix_line
+        )
+    elif already_in_parens_from_context:
+        # We are already inside '(...)' from the calling context (e.g., if condition).
+        # The elements of the chain should be indented one level relative to this 'context'.
+        # (This is the same as the above case in terms of action, but the reasoning differs slightly)
+        context_for_the_chain_elements = context.create_child_context(
+            get_line(expression.children[0]) if expression.children else expression_context.prefix_line
         )
     else:
-        context_for_internals = context
+        # No new grouping '()' by this function, AND not already in '()' from context.
+        # This is for "safe" operators that are split (e.g., A % B where % is safe).
+        # The _format_contextless_operator_chain_based_expression_to_multiple_lines
+        # will use this context to apply its hanging indent. The elements should
+        # start at the current 'context' indent level.
+        context_for_the_chain_elements = context
 
-    child_context = context.create_child_context(expression_context.prefix_line)
-    child_expression_context = ExpressionContext(
-        "",
-        expression_context.prefix_line,
-        "",
-        expression_context.suffix_line,
+    # The chain elements themselves don't have further prefix/suffix from the outer ExpressionContext
+    # when passed to the 'contextless' formatter.
+    chain_elements_expr_context = ExpressionContext(
+        "",  # No specific prefix for the first element of the contextless chain
+        get_line(expression.children[0]),
+        "",  # No specific suffix for the last element of the contextless chain
+        get_end_line(expression.children[-1]),
     )
     fake_meta = Meta()
-    fake_meta.line = expression_context.prefix_line
-    fake_meta.end_line = expression_context.suffix_line
-    fake_expression = Tree(
+    fake_meta.line = get_line(expression.children[0])
+    fake_meta.end_line = get_end_line(expression.children[-1])
+    fake_chain_expression_node = Tree(
         "contextless_operator_chain_based_expression", expression.children, fake_meta
     )
-    indent = context.indent_string
-    prefix = expression_context.prefix_string.strip()
-    if prefix:
-        formatted_lines = [(expression_context.prefix_line, f"{indent}{prefix}{lpar}")]
-    else:
-        formatted_lines = [(expression_context.prefix_line, f"{indent}{lpar}")]
 
-    formatted_lines += _format_concrete_expression(
-        fake_expression, child_expression_context, context_for_internals
+    chain_element_lines = _format_concrete_expression(
+        fake_chain_expression_node,
+        chain_elements_expr_context,
+        context_for_the_chain_elements,
     )
-    formatted_lines.append(
-        (
-            get_end_line(expression.children[-1]),
-            "{}{}{}".format(
-                context.indent_string, rpar, expression_context.suffix_string
-            ),
-        )
-    )
-    formatted_lines = [(ln, l.rstrip()) for ln, l in formatted_lines if l.strip() != ""]
+    formatted_lines.extend(chain_element_lines)
 
-    return formatted_lines
+    # Last line: indent + grouping_rpar + outer_suffix
+    # Determine the line number for the suffix.
+    # It should ideally be the end_line of the last actual content from chain_element_lines,
+    # or fallback to expression_context.suffix_line if that's more meaningful.
+    suffix_line_num = expression_context.suffix_line
+    if chain_element_lines:
+        last_internal_line_num, _ = chain_element_lines[-1]
+        if last_internal_line_num is not None:
+            suffix_line_num = last_internal_line_num
+    if expression_context.suffix_line > suffix_line_num and expression_context.suffix_line != -1:  # Prefer if context's suffix_line is later
+        suffix_line_num = expression_context.suffix_line
+    if suffix_line_num == -1 and expression.children:  # Fallback to end of last child
+        suffix_line_num = get_end_line(expression.children[-1])
+
+    line_last_content = f"{context.indent_string}{grouping_rpar}{outer_suffix.lstrip()}"
+    # If outer_suffix was empty and no grouping_rpar, this might be just indent. Avoid if so.
+    if line_last_content.strip() != "":
+        formatted_lines.append((suffix_line_num, line_last_content.rstrip()))
+
+    # Filter out lines that effectively became empty (e.g., if outer_prefix and grouping_lpar were both empty)
+    # A line is empty if, after stripping, it's an empty string.
+    # context.indent_string itself is not an "empty" content line.
+    final_formatted_lines = []
+    for ln, l in formatted_lines:
+        if l.strip() == "":  # If truly empty after stripping all spaces
+            # Only keep if it was an intentionally blank line from somewhere (rare here)
+            # or if it's the only line and it's supposed to be blank (also rare)
+            # Generally, filter these out.
+            pass
+        elif l == context.indent_string and not (grouping_lpar or grouping_rpar or outer_prefix or outer_suffix):
+            # If the line is JUST the indent string, and there was no real content for it, skip.
+            pass
+        else:
+            final_formatted_lines.append((ln, l))
+
+    return final_formatted_lines
 
 
 def _format_contextless_operator_chain_based_expression_to_multiple_lines(
