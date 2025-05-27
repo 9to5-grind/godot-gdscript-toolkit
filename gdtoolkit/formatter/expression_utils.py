@@ -122,3 +122,21 @@ def _is_unistatement_lambda_with_compoud_statement(expression: Tree) -> bool:
         and expression.children[1].data
         in ["if_stmt", "while_stmt", "for_stmt", "for_stmt_typed", "match_stmt"]
     )
+
+
+def is_safe_operator_expression(expr: Tree) -> bool:
+    return expr.data in {
+        "test_expr",
+        "asless_test_expr",
+        "or_test",
+        "asless_or_test",
+        "and_test",
+        "asless_and_test",
+        "comparison",
+        "arith_expr",
+        "bitw_or",
+        "bitw_and",
+        "bitw_xor",
+        "shift_expr",
+        "mdr_expr",
+    }

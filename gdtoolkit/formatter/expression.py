@@ -1,3 +1,4 @@
+from doctest import debug
 from typing import Dict, Callable, List, Optional
 from importlib import import_module
 
@@ -15,6 +16,7 @@ from .expression_utils import (
     expression_contains_lambda,
     is_any_comma,
     is_trailing_comma,
+    is_safe_operator_expression,
 )
 from .expression_to_str import expression_to_str
 from .constants import TAB_INDENT_SIZE
@@ -447,8 +449,17 @@ def _format_operator_chain_based_expression_to_multiple_lines(
         expression_context.prefix_string.endswith("[")
         and expression_context.suffix_string.startswith("]")
     )
-    lpar = "" if inside_par else "("
-    rpar = "" if inside_par else ")"
+    should_group = not inside_par and not is_safe_operator_expression(expression)
+    lpar = "(" if should_group else ""
+    rpar = ")" if should_group else ""
+
+    if should_group:
+        context_for_internals = context.create_child_context(
+            expression_context.prefix_line
+        )
+    else:
+        context_for_internals = context
+
     child_context = context.create_child_context(expression_context.prefix_line)
     child_expression_context = ExpressionContext(
         "",
@@ -462,16 +473,15 @@ def _format_operator_chain_based_expression_to_multiple_lines(
     fake_expression = Tree(
         "contextless_operator_chain_based_expression", expression.children, fake_meta
     )
-    formatted_lines = [
-        (
-            expression_context.prefix_line,
-            "{}{}{}".format(
-                context.indent_string, expression_context.prefix_string, lpar
-            ),
-        )
-    ]  # type: FormattedLines
+    indent = context.indent_string
+    prefix = expression_context.prefix_string.strip()
+    if prefix:
+        formatted_lines = [(expression_context.prefix_line, f"{indent}{prefix}{lpar}")]
+    else:
+        formatted_lines = [(expression_context.prefix_line, f"{indent}{lpar}")]
+
     formatted_lines += _format_concrete_expression(
-        fake_expression, child_expression_context, child_context
+        fake_expression, child_expression_context, context_for_internals
     )
     formatted_lines.append(
         (
@@ -481,6 +491,8 @@ def _format_operator_chain_based_expression_to_multiple_lines(
             ),
         )
     )
+    formatted_lines = [(ln, l.rstrip()) for ln, l in formatted_lines if l.strip() != ""]
+
     return formatted_lines
 
 

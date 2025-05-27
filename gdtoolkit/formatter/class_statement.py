@@ -146,6 +146,7 @@ def _format_docstring_statement(statement: Tree, context: Context) -> Outcome:
         statement.children[0], expression_context, context
     )
 
+
 def _format_class_statement(statement: Tree, context: Context) -> Outcome:
     last_processed_line_no = get_line(statement)
     name = statement.children[0].value
@@ -159,6 +160,7 @@ def _format_class_statement(statement: Tree, context: Context) -> Outcome:
     )
     formatted_lines += class_lines
     return (formatted_lines, last_processed_line_no)
+
 
 def _format_func_statement(
     statement: Tree, context: Context, prefix: str = ""
