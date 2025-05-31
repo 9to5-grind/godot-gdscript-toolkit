@@ -494,23 +494,41 @@ def _format_operator_chain_based_expression_to_multiple_lines(  # New version
             if not processed_outer_prefix.endswith(tuple(list("([{."))):  # Dot also doesn't need space.
                 space_before_grouping_lpar = " "
 
-    # Line 1: indent + processed_outer_prefix + space_needed + grouping_lpar
-    # The original prefix string from ExpressionContext (e.g., "var x = ") usually has the correct trailing space.
-    # rstrip() might remove it if we're not careful.
-    # Let's adjust:
+    # Check if we're in a variable assignment context and should use hanging indent
+    # Only apply hanging indent for moderately long expressions, not extremely long ones
+    is_var_assignment_context = outer_prefix.strip().endswith(" =")
+    # Count operands (every other child starting from 0: operand, operator, operand, operator, ...)
+    operand_count = len(expression.children[0::2]) if expression.children else 0
+    is_moderately_long_expression = (
+        expression.data == "arith_expr" 
+        and operand_count <= 3  # Only 2-3 operands (like "a + b" or "a + b + c")
+    )
+    use_hanging_indent = (
+        not needs_new_grouping_parens 
+        and not already_in_parens_from_context 
+        and is_var_assignment_context
+        and is_safe_operator_expression(expression)
+        and is_moderately_long_expression
+    )
 
-    prefix_part = outer_prefix
-    if grouping_lpar and prefix_part and not prefix_part.endswith(" ") and not prefix_part.endswith(
-            tuple(list("([{."))):
-        # If we are adding a grouping_lpar, and the prefix_part (like "var x=")
-        # doesn't naturally end with a space or an open paren/bracket/dot, add a space.
-        prefix_part += " "
+    if use_hanging_indent:
+        # For hanging indent, we integrate the first operand on the same line as the prefix
+        # and let the contextless formatter handle the rest with proper indentation
+        pass  # We'll handle this case below by modifying the chain elements context
+    else:
+        # Original logic for cases that need grouping parentheses or are already in parens
+        prefix_part = outer_prefix
+        if grouping_lpar and prefix_part and not prefix_part.endswith(" ") and not prefix_part.endswith(
+                tuple(list("([{."))):
+            # If we are adding a grouping_lpar, and the prefix_part (like "var x=")
+            # doesn't naturally end with a space or an open paren/bracket/dot, add a space.
+            prefix_part += " "
 
-    line_1_content = f"{context.indent_string}{prefix_part}{grouping_lpar}"
+        line_1_content = f"{context.indent_string}{prefix_part}{grouping_lpar}"
 
-    # If outer_prefix was empty and no grouping_lpar, this might be just indent. Avoid if so.
-    if line_1_content.strip() != "":
-        formatted_lines.append((expression_context.prefix_line, line_1_content.rstrip()))
+        # If outer_prefix was empty and no grouping_lpar, this might be just indent. Avoid if so.
+        if line_1_content.strip() != "":
+            formatted_lines.append((expression_context.prefix_line, line_1_content.rstrip()))
 
     # Context for the elements *within* the operator chain (they get indented)
     # Always use a child context for the chain elements themselves when multiline.
@@ -539,12 +557,21 @@ def _format_operator_chain_based_expression_to_multiple_lines(  # New version
 
     # The chain elements themselves don't have further prefix/suffix from the outer ExpressionContext
     # when passed to the 'contextless' formatter.
-    chain_elements_expr_context = ExpressionContext(
-        "",  # No specific prefix for the first element of the contextless chain
-        get_line(expression.children[0]),
-        "",  # No specific suffix for the last element of the contextless chain
-        get_end_line(expression.children[-1]),
-    )
+    if use_hanging_indent:
+        # For hanging indent, include the outer prefix with the first operand
+        chain_elements_expr_context = ExpressionContext(
+            outer_prefix,  # Include the variable assignment prefix
+            expression_context.prefix_line,
+            outer_suffix,  # Include the suffix
+            get_end_line(expression.children[-1]),
+        )
+    else:
+        chain_elements_expr_context = ExpressionContext(
+            "",  # No specific prefix for the first element of the contextless chain
+            get_line(expression.children[0]),
+            "",  # No specific suffix for the last element of the contextless chain
+            get_end_line(expression.children[-1]),
+        )
     fake_meta = Meta()
     fake_meta.line = get_line(expression.children[0])
     fake_meta.end_line = get_end_line(expression.children[-1])
@@ -598,7 +625,7 @@ def _format_operator_chain_based_expression_to_multiple_lines(  # New version
 
 
 def _format_contextless_operator_chain_based_expression_to_multiple_lines(
-    expression: Tree, _: ExpressionContext, context: Context
+    expression: Tree, expression_context: ExpressionContext, context: Context
 ) -> FormattedLines:
     formatted_lines = []  # type: FormattedLines
 
@@ -610,12 +637,14 @@ def _format_contextless_operator_chain_based_expression_to_multiple_lines(
         return []
 
     first_operand_node = operands[0]
+    # Use the prefix and suffix from the expression context for the first operand
+    # This allows hanging indent to work properly
     current_operand_formatted_lines = _format_concrete_expression(
         first_operand_node,
         ExpressionContext(
-            "",  # No operator prefix for the operand itself
-            get_line(first_operand_node),
-            "",  # No operator suffix for the operand itself
+            expression_context.prefix_string,  # Use provided prefix (e.g., "var x = ")
+            expression_context.prefix_line,
+            "",  # No operator suffix for the first operand
             get_end_line(first_operand_node),
         ),
         context,
@@ -634,12 +663,16 @@ def _format_contextless_operator_chain_based_expression_to_multiple_lines(
         else:
             pass
 
+        # For the last operand, include the suffix if it exists
+        is_last_operand = (i == len(operators) - 1)
+        operand_suffix = expression_context.suffix_string if is_last_operand else ""
+        
         current_operand_formatted_lines = _format_concrete_expression(
             next_operand_node,
             ExpressionContext(
                 "",  # No operator prefix
                 get_line(next_operand_node),
-                "",  # No operator suffix
+                operand_suffix,  # Include suffix for last operand
                 get_end_line(next_operand_node),
             ),
             context,
