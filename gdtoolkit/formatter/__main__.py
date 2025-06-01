@@ -107,13 +107,14 @@ def main():
         _format_files(files, line_length, spaces_for_indent, safety_checks)
 
 
+
 def _dump_default_config() -> None:
     if os.path.isfile(CONFIG_FILE_NAME):
         print(f"{CONFIG_FILE_NAME} already exists. Refusing to overwrite.", file=sys.stderr)
         sys.exit(1)
 
     with open(CONFIG_FILE_NAME, "w", encoding="utf-8") as config_file:
-        toml.dump(DEFAULT_CONFIG, config_file)
+        toml.dump(dict(DEFAULT_CONFIG), config_file)
 
 def _find_config_file() -> Optional[str]:
     search_dir = pathlib.Path(os.getcwd())
