@@ -107,12 +107,12 @@ def main():
 
 
 def _dump_default_config() -> None:
-    # TODO: error handling
-    assert not os.path.isfile(CONFIG_FILE_NAME)
-    with open(CONFIG_FILE_NAME, "w", encoding="utf-8") as handle:
-        handle.write(yaml.dump(DEFAULT_CONFIG.copy()))
-    sys.exit(0)
+    if os.path.isfile(CONFIG_FILE_NAME):
+        print(f"{CONFIG_FILE_NAME} already exists. Refusing to overwrite.", file=sys.stderr)
+        sys.exit(1)
 
+    with open(CONFIG_FILE_NAME, "w", encoding="utf-8") as config_file:
+        config_file.write(DEFAULT_CONFIG)
 
 def _find_config_file() -> Optional[str]:
     search_dir = pathlib.Path(os.getcwd())
