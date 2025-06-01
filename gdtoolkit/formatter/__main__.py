@@ -133,13 +133,25 @@ def _find_config_file() -> Optional[str]:
 
 
 def _load_config_file_or_default(config_file_path: Optional[str]) -> MappingProxyType:
-    # TODO: error handling
     if config_file_path is not None:
-        logging.info("Config file found: '%s'", config_file_path)
-        with open(config_file_path, "r", encoding="utf-8") as handle:
-            return yaml.load(handle.read(), Loader=yaml.Loader)
+        try:
+            logging.info("Config file found: '%s'", config_file_path)
+            with open(config_file_path, "r", encoding="utf-8") as handle:
+                config_data = yaml.load(handle.read(), Loader=yaml.Loader)
+                if not isinstance(config_data, dict):
+                    logging.warning("Invalid config format: expected a dict, got %s", type(config_data))
+                    return DEFAULT_CONFIG
+                return MappingProxyType(config_data)
+        except FileNotFoundError:
+            logging.warning("Config file not found: '%s'. Using default config.", config_file_path)
+        except PermissionError:
+            logging.warning("Permission denied while reading config: '%s'. Using default config.", config_file_path)
+        except yaml.YAMLError as e:
+            logging.warning("YAML parsing error in config file '%s': %s. Using default config.", config_file_path, e)
+        except Exception as e:
+            logging.warning("Unexpected error loading config file '%s': %s. Using default config.", config_file_path, e)
 
-    logging.info("""No 'gdformatrc' nor '.gdformatrc' found. Using default config...""")
+    logging.info("No 'gdformatrc' nor '.gdformatrc' found. Using default config...")
     return DEFAULT_CONFIG
 
 
