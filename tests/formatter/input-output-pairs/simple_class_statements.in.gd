@@ -18,3 +18,4 @@ class X:
 
 class Y:
 	extends X
+	pass

@@ -2,6 +2,7 @@ extends "res://dummy.gd"
 
 
 class C extends "res://dummy.gd".X:
+	pass
 
 
 class D extends "res://dummy.gd".X:
@@ -22,3 +23,4 @@ class G:
 
 
 class Z extends G.Y:
+	pass

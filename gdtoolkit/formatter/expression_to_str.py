@@ -227,10 +227,35 @@ def _annotation_args_to_str(annotation: Tree) -> str:
 
 def _lambda_to_str(a_lambda: Tree) -> str:
     assert len(a_lambda.children) == 2
+
+    # Detect if this lambda is used inside a method chain (e.g. .filter(func(...)))
+    # Heuristically inspect the parent node if available
+    context = getattr(a_lambda, "parent", None)
+    while context:
+        if isinstance(context, Tree) and context.data in {"getattr", "getattr_call"}:
+            # Force inline representation for method chains
+            return _lambda_to_inline_str(a_lambda)
+        context = getattr(context, "parent", None)
+
+    # Default formatting (can include block)
     return "{} {}".format(
         expression_to_str(a_lambda.children[0]),
         function_statement_to_str(a_lambda.children[1]),
     )
+
+
+def _lambda_to_inline_str(a_lambda: Tree) -> str:
+    """Return a lambda in inline format: func(args): return expr"""
+    header = expression_to_str(a_lambda.children[0])
+    func_body = a_lambda.children[1]
+
+    # Ensure it's a single return statement
+    if len(func_body.children) == 1 and func_body.children[0].data == "return_stmt":
+        return_expr = standalone_expression_to_str(func_body.children[0].children[0])
+        return f"{header} return {return_expr}"
+
+    # Fallback to default format if not simple
+    return "{} {}".format(header, function_statement_to_str(func_body))
 
 
 def _lambda_header_to_str(lambda_header: Tree) -> str:

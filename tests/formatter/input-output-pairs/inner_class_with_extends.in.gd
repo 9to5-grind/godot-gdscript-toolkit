@@ -1,8 +1,6 @@
-class Outer:
-	class MyInnerTimer extends Timer:
-		func _ready():
-			start()
+extends Node
 
-	func create_timer():
-		var t = MyInnerTimer.new()
-		add_child(t)
+class MyInnerTimer extends Timer:
+    func _init():
+        var t = Timer.new()
+        add_child(t)

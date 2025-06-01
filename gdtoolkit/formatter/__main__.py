@@ -32,7 +32,7 @@ import pathlib
 import difflib
 from typing import List, Tuple, Optional
 from types import MappingProxyType
-import pkg_resources
+from importlib.metadata import version
 
 from docopt import docopt
 import lark
@@ -58,9 +58,7 @@ def main():
     sys.stdout.reconfigure(encoding="utf-8")
     arguments = docopt(
         __doc__,
-        version="gdformat {}".format(
-            pkg_resources.get_distribution("gdtoolkit").version
-        ),
+        version="gdformat {}".format(version("gdtoolkit")),
     )
 
     if arguments["--dump-default-config"]:
@@ -95,6 +93,9 @@ def main():
         if arguments.get("--fast")
         else config.get("safety_checks", DEFAULT_CONFIG["safety_checks"])
     )
+
+    if safety_checks is None:
+        safety_checks = DEFAULT_CONFIG["safety_checks"]
 
     if files == ["-"]:
         _format_stdin(line_length, spaces_for_indent, safety_checks)

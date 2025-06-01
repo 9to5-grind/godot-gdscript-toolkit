@@ -1,7 +1,7 @@
 import os
 
 
-GODOT_SERVER = "godot4-latest"
+GODOT_SERVER = os.environ.get("GODOT_SERVER", "godot")
 
 
 def write_file(a_dir, file_name, code):
