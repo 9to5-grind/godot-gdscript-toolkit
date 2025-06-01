@@ -1,6 +1,6 @@
 func foo(Global):
 	if (true):
-		if !(
+		if (!
 			Global
 			. current_project
 			. layers[Global.current_project.current_layer]

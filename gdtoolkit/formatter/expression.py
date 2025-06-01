@@ -431,13 +431,27 @@ def _format_subscription_to_multiple_lines(
 def _format_operator_chain_based_expression_to_multiple_lines(
     expression: Tree, expression_context: ExpressionContext, context: Context
 ) -> FormattedLines:
-    inside_par = (
-        expression_context.prefix_string.endswith("(")
-        and expression_context.suffix_string.startswith(")")
-    ) or (
-        expression_context.prefix_string.endswith("[")
-        and expression_context.suffix_string.startswith("]")
-    )
+    # Determine if the current expression is already effectively inside parentheses
+    # or brackets provided by a higher-level context.
+    # Example: context prefix="if (!", suffix="):" -> inside 'if (...)'
+    # Example: context prefix="call(", suffix=")" -> inside 'call(...)'
+    # Example: context prefix="arr[", suffix="]" -> inside 'arr[...]'
+
+    is_inside_overall_paren = False
+    if expression_context.suffix_string.startswith(")") and "(" in expression_context.prefix_string:
+        last_paren_index = expression_context.prefix_string.rfind("(")
+        # Ensure no closing ')' in the prefix string occurs after the last opening '('.
+        if ")" not in expression_context.prefix_string[last_paren_index:]:
+            is_inside_overall_paren = True
+
+    is_inside_overall_bracket = False
+    if expression_context.suffix_string.startswith("]") and "[" in expression_context.prefix_string:
+        last_bracket_index = expression_context.prefix_string.rfind("[")
+        # Ensure no closing ']' in the prefix string occurs after the last opening '['.
+        if "]" not in expression_context.prefix_string[last_bracket_index:]:
+            is_inside_overall_bracket = True
+
+    inside_par = is_inside_overall_paren or is_inside_overall_bracket
     lpar = "" if inside_par else "("
     rpar = "" if inside_par else ")"
     child_context = context.create_child_context(expression_context.prefix_line)
