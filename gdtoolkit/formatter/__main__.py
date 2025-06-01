@@ -33,6 +33,7 @@ import difflib
 from typing import List, Tuple, Optional
 from types import MappingProxyType
 import pkg_resources
+import toml
 
 from docopt import docopt
 import lark
@@ -112,7 +113,7 @@ def _dump_default_config() -> None:
         sys.exit(1)
 
     with open(CONFIG_FILE_NAME, "w", encoding="utf-8") as config_file:
-        config_file.write(DEFAULT_CONFIG)
+        toml.dump(DEFAULT_CONFIG, config_file)
 
 def _find_config_file() -> Optional[str]:
     search_dir = pathlib.Path(os.getcwd())
