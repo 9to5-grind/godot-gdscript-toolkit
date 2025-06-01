@@ -36,9 +36,7 @@ class Y:
 		pass
 
 
-class X:
-	extends Y
-
+class X extends Y:
 	func bar():
 		pass
 

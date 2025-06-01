@@ -11,15 +11,11 @@ class X:
 		)
 
 
-class Y:
-	extends X
-
+class Y extends X:
 	func bar():
 		pass
 
 
-class Z:
-	extends X
-
+class Z extends X:
 	func bar():
 		pass

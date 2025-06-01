@@ -1,5 +1,4 @@
-class WeaponSystemBullet:
-	extends Node
+class WeaponSystemBullet extends Node:
 	pass
 
 

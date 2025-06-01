@@ -3,9 +3,7 @@ class Y:
 		pass
 
 
-class X:
-	extends Y
-
+class X extends Y:
 	func foo(a):
 		pass
 
@@ -35,8 +33,6 @@ class X:
 		pass
 
 
-class Z:
-	extends Y
-
+class Z extends Y:
 	func _init(a, b := 1, c: int = 1):
 		pass

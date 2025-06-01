@@ -19,6 +19,7 @@ from .property import (
     format_property_body,
 )
 from .const_statement import format_const_statement
+from .expression_to_str import expression_to_str
 
 
 def format_class_statement(statement: Tree, context: Context) -> Outcome:
@@ -149,18 +150,38 @@ def _format_docstring_statement(statement: Tree, context: Context) -> Outcome:
 
 def _format_class_statement(statement: Tree, context: Context) -> Outcome:
     last_processed_line_no = get_line(statement)
-    name = statement.children[0].value
+    name_token = statement.children[0]
+    extends_stmt = None
+    body_start_index = 1
+
+    if len(statement.children) > 1 and hasattr(statement.children[1], "data") and statement.children[1].data == "extends_stmt":
+        extends_stmt = statement.children[1]
+        body_start_index = 2
+
+    base = ""
+    if extends_stmt:
+        base = f" extends {_extract_extends_base(extends_stmt)}"
+
     formatted_lines: FormattedLines = [
-        (get_line(statement), f"{context.indent_string}class {name}:")
+        (get_line(statement), f"{context.indent_string}class {name_token.value}{base}:")
     ]
-    class_lines, last_processed_line_no = format_block(
-        statement.children[1:],
-        format_class_statement,
-        context.create_child_context(last_processed_line_no),
-    )
-    formatted_lines += class_lines
+
+    class_body = statement.children[body_start_index:] if len(statement.children) > body_start_index else []
+    if class_body:
+        class_lines, last_processed_line_no = format_block(
+            class_body,
+            format_class_statement,
+            context.create_child_context(last_processed_line_no),
+        )
+        formatted_lines += class_lines
+
     return (formatted_lines, last_processed_line_no)
 
+def _extract_extends_base(extends: Tree) -> str:
+    # Falls der ganze Ausdruck zusammengesetzt ist (z. B. "res://file.gd".X.Y)
+    if len(extends.children) > 1:
+        return ".".join([expression_to_str(child) for child in extends.children])
+    return expression_to_str(extends.children[0])
 
 def _format_func_statement(
     statement: Tree, context: Context, prefix: str = ""

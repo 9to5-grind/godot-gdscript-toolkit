@@ -18,5 +18,4 @@ class X:
 	var xx: A.B
 
 
-class Y:
-	extends X
+class Y extends X:
