@@ -10,7 +10,6 @@ from .block import format_block
 from .function_statement import format_func_statement
 from .statement_utils import format_simple_statement
 from .var_statement import format_var_statement
-from .expression_to_str import expression_to_str
 from .expression import format_concrete_expression
 from .annotation import format_standalone_annotation
 from .property import (
@@ -154,7 +153,11 @@ def _format_class_statement(statement: Tree, context: Context) -> Outcome:
     extends_stmt = None
     body_start_index = 1
 
-    if len(statement.children) > 1 and hasattr(statement.children[1], "data") and statement.children[1].data == "extends_stmt":
+    if (
+        len(statement.children) > 1
+        and hasattr(statement.children[1], "data")
+        and statement.children[1].data == "extends_stmt"
+    ):
         extends_stmt = statement.children[1]
         body_start_index = 2
 
@@ -166,7 +169,11 @@ def _format_class_statement(statement: Tree, context: Context) -> Outcome:
         (get_line(statement), f"{context.indent_string}class {name_token.value}{base}:")
     ]
 
-    class_body = statement.children[body_start_index:] if len(statement.children) > body_start_index else []
+    class_body = (
+        statement.children[body_start_index:]
+        if len(statement.children) > body_start_index
+        else []
+    )
     if class_body:
         class_lines, last_processed_line_no = format_block(
             class_body,
@@ -177,11 +184,13 @@ def _format_class_statement(statement: Tree, context: Context) -> Outcome:
 
     return (formatted_lines, last_processed_line_no)
 
+
 def _extract_extends_base(extends: Tree) -> str:
     # Falls der ganze Ausdruck zusammengesetzt ist (z. B. "res://file.gd".X.Y)
     if len(extends.children) > 1:
         return ".".join([expression_to_str(child) for child in extends.children])
     return expression_to_str(extends.children[0])
+
 
 def _format_func_statement(
     statement: Tree, context: Context, prefix: str = ""
@@ -199,6 +208,7 @@ def _format_func_statement(
     return (formatted_lines, last_processed_line_no)
 
 
+# pylint: disable=too-many-arguments, too-many-positional-arguments
 def _format_func_header(statement: Tree, context: Context, prefix: str) -> Outcome:
     name = statement.children[0].value
     has_return_type = len(statement.children) > 2

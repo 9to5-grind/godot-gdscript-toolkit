@@ -438,14 +438,20 @@ def _format_operator_chain_based_expression_to_multiple_lines(
     # Example: context prefix="arr[", suffix="]" -> inside 'arr[...]'
 
     is_inside_overall_paren = False
-    if expression_context.suffix_string.startswith(")") and "(" in expression_context.prefix_string:
+    if (
+        expression_context.suffix_string.startswith(")")
+        and "(" in expression_context.prefix_string
+    ):
         last_paren_index = expression_context.prefix_string.rfind("(")
         # Ensure no closing ')' in the prefix string occurs after the last opening '('.
         if ")" not in expression_context.prefix_string[last_paren_index:]:
             is_inside_overall_paren = True
 
     is_inside_overall_bracket = False
-    if expression_context.suffix_string.startswith("]") and "[" in expression_context.prefix_string:
+    if (
+        expression_context.suffix_string.startswith("]")
+        and "[" in expression_context.prefix_string
+    ):
         last_bracket_index = expression_context.prefix_string.rfind("[")
         # Ensure no closing ']' in the prefix string occurs after the last opening '['.
         if "]" not in expression_context.prefix_string[last_bracket_index:]:
