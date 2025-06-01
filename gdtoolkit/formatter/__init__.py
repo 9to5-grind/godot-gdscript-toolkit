@@ -14,7 +14,7 @@ from .safety_checks import (  # noqa: F401
 
 DEFAULT_CONFIG = MappingProxyType(
     {
-        "excluded_directories": {".git"},
+        "excluded_directories": [".git", ".vscode", ".idea", "addons"],
         "safety_checks": None,
         "use_spaces": None,
         "line_length": 120,
