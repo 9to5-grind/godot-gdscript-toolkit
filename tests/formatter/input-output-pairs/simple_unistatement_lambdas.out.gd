@@ -45,7 +45,7 @@ func bar():
 		for x in [1]:
 			pass
 	var x17 = func():
-		for (x: int in [1]):
+		for x: int in [1]:
 			pass
 	var x18 = func():
 		match 1:

@@ -126,7 +126,7 @@ func foo():
 			"a17": 1
 		}
 		var b = [a["a1"], 1, 2, 3]
-		for (bb in b):
+		for bb in b:
 			break
 
 	pass

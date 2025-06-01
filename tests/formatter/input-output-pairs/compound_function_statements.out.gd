@@ -21,6 +21,6 @@ class X:
 		while (true):
 			pass
 			pass
-		for (i in range(10)):
+		for i in range(10):
 			break
 			continue

@@ -85,18 +85,21 @@ def _format_if_statement(statement: Tree, context: Context) -> Outcome:
     return (formatted_lines, previously_processed_line_number)  # type: ignore
 
 
+
 def _format_for_statement(statement: Tree, context: Context) -> Outcome:
-    prefix = f"for {statement.children[0].value} in "
+    target = statement.children[0].value
+    prefix = f"for {target} in "
     suffix = ":"
     expr_position = 1
-    return _format_branch(prefix, suffix, expr_position, statement, context, wrap_expression_in_parentheses=True)
+    return _format_branch(prefix, suffix, expr_position, statement, context, wrap_expression_in_parentheses=False)
+
 
 
 def _format_for_statement_typed(statement: Tree, context: Context) -> Outcome:
     prefix = f"for {statement.children[0].value}: {statement.children[1].value} in "
     suffix = ":"
     expr_position = 2
-    return _format_branch(prefix, suffix, expr_position, statement, context, wrap_expression_in_parentheses=True)
+    return _format_branch(prefix, suffix, expr_position, statement, context, wrap_expression_in_parentheses=False)
 
 
 def _format_match_statement(statement: Tree, context: Context) -> Outcome:
