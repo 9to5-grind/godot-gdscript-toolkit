@@ -25,8 +25,8 @@ def format_func_statement(statement: Tree, context: Context) -> Outcome:
         "break_stmt": partial(format_simple_statement, "break"),
         "breakpoint_stmt": partial(format_simple_statement, "breakpoint"),
         "continue_stmt": partial(format_simple_statement, "continue"),
-        "if_stmt": _format_if_statement,
-        "while_stmt": partial(_format_branch, "while ", ":", 0),
+        "if_stmt": _format_if_statement, # Will call _format_branch with wrapping
+        "while_stmt": partial(_format_branch, "while ", ":", 0, wrap_expression_in_parentheses=True),
         "for_stmt": _format_for_statement,
         "for_stmt_typed": _format_for_statement_typed,
         "match_stmt": _format_match_statement,
@@ -74,7 +74,12 @@ def _format_if_statement(statement: Tree, context: Context) -> Outcome:
             branch.data
         ]
         lines, previously_processed_line_number = _format_branch(
-            branch_prefix, ":", expr_position, branch, context
+            branch_prefix,
+            ":",
+            expr_position,
+            branch,
+            context,
+            wrap_expression_in_parentheses=(branch.data != "else_branch"), # True for if/elif
         )
         formatted_lines += lines
     return (formatted_lines, previously_processed_line_number)  # type: ignore
@@ -84,14 +89,14 @@ def _format_for_statement(statement: Tree, context: Context) -> Outcome:
     prefix = f"for {statement.children[0].value} in "
     suffix = ":"
     expr_position = 1
-    return _format_branch(prefix, suffix, expr_position, statement, context)
+    return _format_branch(prefix, suffix, expr_position, statement, context, wrap_expression_in_parentheses=True)
 
 
 def _format_for_statement_typed(statement: Tree, context: Context) -> Outcome:
     prefix = f"for {statement.children[0].value}: {statement.children[1].value} in "
     suffix = ":"
     expr_position = 2
-    return _format_branch(prefix, suffix, expr_position, statement, context)
+    return _format_branch(prefix, suffix, expr_position, statement, context, wrap_expression_in_parentheses=True)
 
 
 def _format_match_statement(statement: Tree, context: Context) -> Outcome:
@@ -123,11 +128,21 @@ def _format_branch(
     expr_position: Optional[int],
     statement: Tree,
     context: Context,
+    wrap_expression_in_parentheses: bool = False,
 ) -> Outcome:
     if expr_position is not None:
         expr = statement.children[expr_position]
+        effective_prefix = prefix
+        effective_suffix = suffix
+        if wrap_expression_in_parentheses:
+            effective_prefix = f"{prefix}("
+            effective_suffix = f"){suffix}"
+
         expression_context = ExpressionContext(
-            prefix, get_line(statement), suffix, get_line(statement)
+            effective_prefix,
+            get_line(statement),
+            effective_suffix,
+            get_line(statement),
         )
         header_lines, last_processed_line_no = format_expression(
             expr, expression_context, context
