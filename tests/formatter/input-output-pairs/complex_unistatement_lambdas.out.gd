@@ -1,10 +1,8 @@
 func foo(x):
 	pass
 
-
 func bar(x, y):
 	pass
-
 
 func baz():
 	foo(func(): pass)

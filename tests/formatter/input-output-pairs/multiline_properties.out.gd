@@ -38,10 +38,8 @@ var p10:
 		var xyz = 234
 		p8 = x + 1 + xyz
 
-
 func __get():
 	return 1
-
 
 func __set(v):
 	pass

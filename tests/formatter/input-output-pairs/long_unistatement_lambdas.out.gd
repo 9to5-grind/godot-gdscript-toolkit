@@ -1,7 +1,6 @@
 func xyz(x):
 	pass
 
-
 func foo():
 	var x1 = func(
 		p1,

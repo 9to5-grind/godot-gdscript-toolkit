@@ -1,10 +1,8 @@
 var x
 var y
 
-
 func foo():
 	pass
-
 
 var q
 
@@ -36,17 +34,13 @@ class X:
 func bar():
 	pass
 
-
 func baz():
 	pass
 
-
 # zzz
-
 
 func bat():
 	pass
-
 
 var a
 var b

@@ -1,7 +1,6 @@
 func cccc(a, b, c):
 	pass
 
-
 func foo(aaaaa):
 	var x = (
 		aaaaa

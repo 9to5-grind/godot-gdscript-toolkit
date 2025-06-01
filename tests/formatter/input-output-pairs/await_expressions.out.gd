@@ -1,15 +1,12 @@
 extends Node
 
-
 func coroutine(_r):
 	await get_tree().process_frame
 	return 1
 
-
 func coroutine2():
 	await get_tree().process_frame
 	return get_tree().process_frame
-
 
 func foo():
 	await get_tree().process_frame

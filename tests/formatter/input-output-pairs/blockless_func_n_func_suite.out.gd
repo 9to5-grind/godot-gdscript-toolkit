@@ -18,10 +18,10 @@ class Y:
 	var g
 
 	func baz():
-		if true:
+		if (true):
 			var h
 		var i
-		while true:
+		while (true):
 			var j
 			var k
 		var l

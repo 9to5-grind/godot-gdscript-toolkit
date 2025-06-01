@@ -14,7 +14,6 @@ signal s(
 # 	# ee2
 # ) var x
 
-
 func foo():
 	# aaa
 	var x = [
@@ -42,7 +41,6 @@ func foo():
 		# ww3
 	}
 
-
 func bar(
 	# qq4
 	a,
@@ -52,7 +50,6 @@ func bar(
 ):
 	# rr4
 	pass
-
 
 func baz():
 	bar(

@@ -56,10 +56,8 @@ var p10:  # inline i
 	# t
 # u
 
-
 func __get():
 	return 1
-
 
 func __set(v):
 	pass

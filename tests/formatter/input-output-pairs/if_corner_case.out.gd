@@ -1,5 +1,5 @@
 func foo(Global):
-	if true:
+	if (true):
 		if !(
 			Global
 			. current_project

@@ -180,7 +180,7 @@ def test_formatting_with_default_line_length(tmp_path):
     dummy_file = write_file(
         tmp_path,
         "script.gd",
-        "var x = 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1\n",
+        "var x = 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + \n",
     )
     outcome = subprocess.run(
         ["gdformat", "--check", dummy_file], check=False, capture_output=True

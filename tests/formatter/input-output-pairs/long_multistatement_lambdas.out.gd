@@ -1,7 +1,6 @@
 func xyz(x):
 	pass
 
-
 func foo():
 	var x1 = func(
 		p1,
@@ -79,7 +78,7 @@ func foo():
 			1
 		]
 		var b = len(a) + 1
-		if a > 1:
+		if (a > 1):
 			return 1
 		return 2
 	var x2 = func baz(
@@ -127,7 +126,7 @@ func foo():
 			"a17": 1
 		}
 		var b = [a["a1"], 1, 2, 3]
-		for bb in b:
+		for (bb in b):
 			break
 
 	pass

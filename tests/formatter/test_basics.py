@@ -33,12 +33,11 @@ def test_indentation_using_tabs():
         [
             "extends Node",
             "",
-            "",
             "func foo():",
-            "\tif True:",
+            "\tif (True):",
             "\t\tpass",
-            "\tif False:",
-            "\t\twhile True:",
+            "\tif (False):",
+            "\t\twhile (True):",
             "\t\t\tpass",
             "",
         ]
@@ -62,12 +61,11 @@ def test_indentation_using_spaces():
         [
             "extends Node",
             "",
-            "",
             "func foo():",
-            "   if True:",
+            "   if (True):",
             "      pass",
-            "   if False:",
-            "      while True:",
+            "   if (False):",
+            "      while (True):",
             "         pass",
             "",
         ]

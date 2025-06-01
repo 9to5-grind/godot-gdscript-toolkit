@@ -20,7 +20,6 @@ func foo():
 	# var x17 = func(): for x : int in [1]: pass
 	pass
 
-
 func bar():
 	var x1 = func(): pass
 	var x2 = func() -> int: return 1
@@ -37,16 +36,16 @@ func bar():
 	var x13a = func(): const foo: int = 1
 	var x13b = func(): const foo := 1
 	var x14 = func():
-		if true:
+		if (true):
 			pass
 	var x15 = func():
-		while false:
+		while (false):
 			pass
 	var x16 = func():
 		for x in [1]:
 			pass
 	var x17 = func():
-		for x: int in [1]:
+		for (x: int in [1]):
 			pass
 	var x18 = func():
 		match 1:

@@ -1,10 +1,8 @@
 func foo(x):
 	pass
 
-
 func bar(x, y):
 	pass
-
 
 func actual_params():
 	foo(
@@ -16,14 +14,14 @@ func actual_params():
 	foo(
 		func():
 			var x = 1
-			if x > 1:
+			if (x > 1):
 				print(x)
 	)
 
 	foo(
 		func():
 			var x = 1
-			if x > 1:
+			if (x > 1):
 				print(x)
 	)
 
@@ -57,7 +55,7 @@ func actual_params():
 	bar(
 		func():
 			var x = 1
-			if x > 0:
+			if (x > 0):
 				print(x),
 		func():
 			var y = 1
@@ -67,13 +65,12 @@ func actual_params():
 	bar(
 		func():
 			var x = 1
-			if x > 0:
+			if (x > 0):
 				print(x),
 		func():
 			var y = 1
 			return y
 	)
-
 
 func arrays():
 	var x1 = [
@@ -113,7 +110,7 @@ func arrays():
 	var x6 = [
 		func():
 			var x = 1
-			if x > 0:
+			if (x > 0):
 				print(x),
 		func():
 			var x = 1
@@ -122,13 +119,12 @@ func arrays():
 	var x7 = [
 		func():
 			var x = 1
-			if x > 0:
+			if (x > 0):
 				print(x),
 		func():
 			var x = 1
 			return x
 	]
-
 
 func dicts():
 	var x1 = {
@@ -187,7 +183,7 @@ func dicts():
 		"a":
 		func():
 			var x = 1
-			if x > 0:
+			if (x > 0):
 				print(x),
 		"b":
 		func():
@@ -198,7 +194,7 @@ func dicts():
 		"a":
 		func():
 			var x = 1
-			if x > 0:
+			if (x > 0):
 				print(x),
 		"b":
 		func():
@@ -209,14 +205,13 @@ func dicts():
 		"a":
 		func():
 			var x = 1
-			if x > 0:
+			if (x > 0):
 				print(x),
 		"b":
 		func():
 			var x = 1
 			return x
 	}
-
 
 func nested():
 	var x1 = func():
@@ -240,7 +235,7 @@ func nested():
 		pass
 
 	var x4 = func():
-		if true:
+		if (true):
 			var x4r = func():
 				pass
 				pass
@@ -248,9 +243,9 @@ func nested():
 		pass
 
 	var x5 = func():
-		if true:
+		if (true):
 			var x5r = func():
-				if true:
+				if (true):
 					pass
 					pass
 				pass
@@ -258,9 +253,9 @@ func nested():
 		pass
 
 	var x6 = func():
-		if true:
+		if (true):
 			var x6r = func():
-				if true:
+				if (true):
 					var x6rr = func():
 						pass
 						pass

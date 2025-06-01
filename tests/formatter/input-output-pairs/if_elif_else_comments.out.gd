@@ -1,11 +1,11 @@
 class X:
 	func foo():
 		for i in [1]:
-			if i:
+			if (i):
 				# aaa
 				pass
 			# bbb
-			elif i:
+			elif (i):
 				# ccc
 				pass
 			# ddd

@@ -63,10 +63,8 @@ var p20 := 1:
 	get = __get,
 	set = __set
 
-
 func __get():
 	return 1
-
 
 func __set(v):
 	pass
